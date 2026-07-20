@@ -15,3 +15,6 @@ internal/embed/dist/**
 # Env (repo-wide)
 .env
 .env.*
+
+# Kraftkit code
+kraftkit/
