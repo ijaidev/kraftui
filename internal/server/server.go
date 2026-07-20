@@ -48,15 +48,19 @@ func (s *Server) Listen(ctx context.Context) error {
 	}()
 
 	select {
-	case sig := <-ctx.Done():
-		log.Printf("received %s, shutting down", sig)
+	case <-ctx.Done():
+		log.Printf("received interruption, shutting down")
 	case err := <-errCh:
 		return err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	return srv.Shutdown(ctx)
+	err = srv.Shutdown(ctx)
+	if err != nil {
+		return fmt.Errorf("error shutting down the server: %w", err)
+	}
+	return nil
 }
 
 func (s *Server) getListner() (net.Listener, error) {
