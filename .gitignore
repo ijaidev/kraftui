@@ -1,1 +1,17 @@
-kraftkit/
+# Binaries
+/bin/
+*.exe
+*.test
+
+# Embedded Next.js export
+internal/embed/dist/**
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Env (repo-wide)
+.env
+.env.*
