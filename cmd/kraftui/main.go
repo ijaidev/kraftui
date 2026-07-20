@@ -35,7 +35,6 @@ func main() {
 	err := server.Listen(ctx)
 
 	if err != nil {
-		log.Fatal(err)
-		os.Exit(1)
+		log.Fatalf("%v\nReport an issue: https://github.com/ijaidev/kraftui", err)
 	}
 }
