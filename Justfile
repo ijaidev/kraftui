@@ -3,8 +3,8 @@ set shell := ["bash", "-euo", "pipefail", "-c"]
 root := justfile_directory()
 bin  := root / "bin" / "kraftui"
 
-# Default: list recipes
-default:
+# list (Default): list recipes
+list:
     @just --list
 
 # Install frontend dependencies
@@ -26,7 +26,7 @@ build-go:
 # Full build: frontend embed + Go binary
 build: frontend-build build-go
 
-# Run the server (builds first)
+# Run the server
 run:
     "{{ bin }}"
 
