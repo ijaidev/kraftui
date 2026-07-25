@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	embedfs "github.com/ijaidev/kraftui/internal/embed"
+	embedfs "github.com/ijaidev/kraftui/internal/ui"
 )
 
 type Server struct {
@@ -17,7 +17,7 @@ type Server struct {
 }
 
 func (s *Server) Listen(ctx context.Context) error {
-	ui, err := embedfs.Handler()
+	ui, err := embedfs.UiHandler()
 	if err != nil {
 		log.Fatalf("embed frontend: %v", err)
 	}
