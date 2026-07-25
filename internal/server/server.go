@@ -64,8 +64,6 @@ func (s *Server) Listen(ctx context.Context) error {
 }
 
 func (s *Server) getListner() (net.Listener, error) {
-	var listener net.Listener
-	var err error
 	maxAttempts := 5
 
 	if s.port != 0 {
@@ -78,7 +76,7 @@ func (s *Server) getListner() (net.Listener, error) {
 		currentPort := startPort + i
 		address := fmt.Sprintf(":%d", currentPort)
 
-		listener, err = net.Listen("tcp", address)
+		listener, err := net.Listen("tcp", address)
 		if err == nil {
 			s.port = currentPort
 			return listener, nil
