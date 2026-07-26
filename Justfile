@@ -48,3 +48,8 @@ frontend-dev: deps
 clean:
     rm -rf "{{ bin_dir }}" "{{ frontend_next }}" "{{ frontend_out }}" "{{ dist }}"
     mkdir -p "{{ dist }}"
+
+# Format Go code using industry-standard go fmt
+fmt:
+    go fmt ./...
+
