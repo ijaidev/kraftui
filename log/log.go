@@ -30,10 +30,11 @@ const (
 )
 
 // G is the process-wide logger. It defaults to slog's standard logger until
-// configuration is loaded during package initialization.
+// log.Configure() is called with application settings.
 var G = slog.Default()
 
-func initLogger() {
+// Configure initializes G after application configuration has been loaded.
+func Configure() {
 	if config.SuppressLogs() {
 		G = slog.New(slog.NewTextHandler(io.Discard, nil))
 		slog.SetDefault(G)
@@ -42,11 +43,6 @@ func initLogger() {
 
 	G = newLogger(config.CurrentLogType(), config.CurrentLogLevel(), os.Stderr)
 	slog.SetDefault(G)
-}
-
-// Configure rebuilds G after command-line configuration has been applied.
-func Configure() {
-	initLogger()
 }
 
 func newLogger(kind LogType, level LogLevel, output io.Writer) *slog.Logger {
