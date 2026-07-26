@@ -3,12 +3,12 @@ package server
 import (
 	"context"
 	"fmt"
-	"log"
 	"net"
 	"net/http"
 	"time"
 
 	embedfs "github.com/ijaidev/kraftui/internal/ui"
+	"github.com/ijaidev/kraftui/log"
 )
 
 type Server struct {
@@ -19,7 +19,7 @@ type Server struct {
 func (s *Server) Listen(ctx context.Context) error {
 	ui, err := embedfs.UiHandler()
 	if err != nil {
-		log.Fatalf("embed frontend: %v", err)
+		return fmt.Errorf("embed frontend: %w", err)
 	}
 
 	mux := http.NewServeMux()
@@ -40,7 +40,7 @@ func (s *Server) Listen(ctx context.Context) error {
 	}
 	errCh := make(chan error, 1)
 	go func() {
-		log.Printf("kraftui %s listening on http://localhost:%d", s.version, s.port)
+		log.G.Info("server listening", "version", s.version, "url", fmt.Sprintf("http://localhost:%d", s.port))
 		if err := srv.Serve(listner); err != nil && err != http.ErrServerClosed {
 			errCh <- err
 		}
@@ -49,7 +49,7 @@ func (s *Server) Listen(ctx context.Context) error {
 
 	select {
 	case <-ctx.Done():
-		log.Printf("received interruption, shutting down")
+		log.G.Info("received interruption, shutting down")
 	case err := <-errCh:
 		return err
 	}
@@ -84,7 +84,7 @@ func (s *Server) getListner() (net.Listener, error) {
 
 		// Log only if the failure reason is actually "port occupied"
 		if isPortOccupiedError(err) {
-			log.Printf("Port %d is occupied, checking next...", currentPort)
+			log.G.Warn("port is occupied, checking next", "port", currentPort)
 		} else {
 			// Fail immediately if it's a critical error (like permission denied)
 			return nil, fmt.Errorf("critical binding error on port %d: %w", currentPort, err)

@@ -2,39 +2,43 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/ijaidev/kraftui/config"
 	"github.com/ijaidev/kraftui/internal/server"
+	"github.com/ijaidev/kraftui/log"
 )
 
-// version can be overridden at build time:
-//
-//	go build -ldflags "-X main.version=0.1.0" ./cmd/kraftui
-var version = "dev"
-
 func main() {
-	port := flag.Int("port", 0, "HTTP listen port")
-	showVersion := flag.Bool("version", false, "Print version and exit")
-	flag.Parse()
-
-	if *showVersion {
-		fmt.Println(version)
+	options, err := loadCLI(os.Args[1:])
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "configuration error: %v\n", err)
+		os.Exit(2)
+	}
+	if options.help {
+		writeHelp(os.Stdout, options.parser)
 		return
 	}
+	if options.values.Version {
+		fmt.Println(config.KraftVersion())
+		return
+	}
+	config.Load(options.values.Port, options.values.LogType, options.values.LogLevel, options.values.SuppressLogs)
+	log.Configure()
+	log.G.Info("logger configured", "type", config.CurrentLogType(), "level", config.CurrentLogLevel(), "suppressed", config.SuppressLogs())
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	server := server.NewServer(*port, version)
+	server := server.NewServer(config.Port(), config.KraftVersion())
 
-	err := server.Listen(ctx)
+	err = server.Listen(ctx)
 
 	if err != nil {
-		log.Fatalf("%v\nReport an issue: https://github.com/ijaidev/kraftui", err)
+		log.G.Error("server stopped", "error", err, "report_issue", "https://github.com/ijaidev/kraftui")
+		os.Exit(1)
 	}
 }

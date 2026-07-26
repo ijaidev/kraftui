@@ -4,6 +4,8 @@ import (
 	"io/fs"
 	"net/http"
 	"strings"
+
+	"github.com/ijaidev/kraftui/log"
 )
 
 type notFoundWriter struct {
@@ -51,17 +53,21 @@ func nextJsHandler(dist fs.FS) (http.Handler, error) {
 
 		// 2. Root path or exact static asset (_next/..., favicon.ico)
 		if cleanPath == "" || isFile(dist, cleanPath) {
+			log.G.Debug("serving static assets", "path", cleanPath)
 			fileServer.ServeHTTP(w, r)
 			return
 		}
 
 		// 3. Next.js static page route (/new or /new/ -> new.html)
 		if isFile(dist, cleanPath+".html") {
+			log.G.Debug("serving static page route", "path", cleanPath)
 			r2 := r.Clone(r.Context())
 			r2.URL.Path = "/" + cleanPath + ".html"
 			fileServer.ServeHTTP(w, r2)
 			return
 		}
+
+		log.G.Debug("serving not-found route", "path", cleanPath)
 
 		// 4. Next.js 404 page fallback (with 404 status)
 		if isFile(dist, "404.html") {
