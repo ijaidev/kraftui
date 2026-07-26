@@ -33,8 +33,12 @@ build-go:
 build: frontend-build build-go
 
 # Builds and Runs the Go server
-dev: build-go
-    {{ bin }}
+dev *FLAGS: build-go
+    "{{ bin }}" {{ FLAGS }}
+
+# Builds and Runs the Go server in debug mode
+dev-debug: (dev "--log-level debug")
+
 
 # Run the server (Builds first)
 run: build
