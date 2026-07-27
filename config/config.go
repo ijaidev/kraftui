@@ -3,7 +3,11 @@ package config
 import (
 	"fmt"
 	"strings"
+	"time"
 )
+
+// SupportedKraftVersion is the exact Kraft CLI version supported by KraftUI.
+const SupportedKraftVersion = "0.12.14"
 
 // LogType controls the logger output format.
 type LogType string
@@ -50,6 +54,37 @@ type config struct {
 	logType      LogType
 	logLevel     LogLevel
 	suppressLogs bool
+	kraft        KraftConfig
+}
+
+// KraftConfig controls how KraftUI invokes the local Kraft CLI.
+type KraftConfig struct {
+	Binary          string
+	ExpectedVersion string
+	CommandTimeout  time.Duration
+}
+
+// DefaultKraftConfig returns the supported local CLI configuration.
+func DefaultKraftConfig() KraftConfig {
+	return KraftConfig{
+		Binary:          "kraft",
+		ExpectedVersion: SupportedKraftVersion,
+		CommandTimeout:  15 * time.Second,
+	}
+}
+
+// ValidateKraftConfig rejects incomplete or unsafe Kraft CLI settings.
+func ValidateKraftConfig(value KraftConfig) error {
+	if strings.TrimSpace(value.Binary) == "" {
+		return fmt.Errorf("Kraft binary must not be empty")
+	}
+	if strings.TrimSpace(value.ExpectedVersion) == "" {
+		return fmt.Errorf("Kraft version must not be empty")
+	}
+	if value.CommandTimeout <= 0 {
+		return fmt.Errorf("Kraft command timeout must be greater than zero")
+	}
+	return nil
 }
 
 // version can be overridden at build time:
@@ -63,21 +98,23 @@ var g = config{
 	logType:      LogTypeFancy,
 	logLevel:     LogLevelInfo,
 	suppressLogs: false,
+	kraft:        DefaultKraftConfig(),
 }
 
 // Load stores resolved runtime configuration.
-func Load(port int, logType LogType, logLevel LogLevel, suppressLogs bool) {
+func Load(port int, logType LogType, logLevel LogLevel, suppressLogs bool, kraft KraftConfig) {
 	g = config{
 		version:      version,
 		port:         port,
 		logType:      logType,
 		logLevel:     logLevel,
 		suppressLogs: suppressLogs,
+		kraft:        kraft,
 	}
 }
 
-// KraftVersion returns the configured Kraft version.
-func KraftVersion() string {
+// Version returns the KraftUI application version.
+func Version() string {
 	return g.version
 }
 
@@ -99,4 +136,9 @@ func CurrentLogLevel() LogLevel {
 // SuppressLogs reports whether log output is disabled.
 func SuppressLogs() bool {
 	return g.suppressLogs
+}
+
+// Kraft returns the configured local Kraft CLI settings.
+func Kraft() KraftConfig {
+	return g.kraft
 }

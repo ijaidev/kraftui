@@ -13,6 +13,15 @@ cmd_pkg       := "./cmd/kraftui"
 list:
     @just --list
 
+# Generate the JSON-tagged Go models and server interface from openapi/openapi.yaml
+openapi-generate:
+    go generate ./internal/api
+
+# Regenerate OpenAPI models and fail when generated code is stale
+openapi-check:
+    go generate ./internal/api
+    git diff --exit-code -- internal/api/api.gen.go
+
 # Install frontend dependencies
 deps:
     cd "{{ frontend_dir }}" && pnpm install
@@ -56,4 +65,3 @@ clean:
 # Format Go code using industry-standard go fmt
 fmt:
     go fmt ./...
-

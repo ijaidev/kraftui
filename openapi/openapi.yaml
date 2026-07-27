@@ -1,0 +1,237 @@
+openapi: 3.1.0
+info:
+  title: KraftUI API
+  version: 0.1.0
+  description: Local, read-only access to resources managed by the Kraft CLI.
+servers:
+  - url: /
+paths:
+  /api/health:
+    get:
+      operationId: getHealth
+      responses:
+        '200':
+          description: KraftUI and its configured Kraft CLI are ready.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/machines:
+    get:
+      operationId: listMachines
+      parameters:
+        - $ref: '#/components/parameters/AllMachines'
+        - $ref: '#/components/parameters/Platform'
+        - $ref: '#/components/parameters/Architecture'
+        - $ref: '#/components/parameters/LongOutput'
+      responses:
+        '200':
+          description: Local machines.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Machine'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '502':
+          $ref: '#/components/responses/KraftFailure'
+  /api/v1/packages:
+    get:
+      operationId: listPackages
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/PackageKind'
+        - $ref: '#/components/parameters/Platform'
+        - $ref: '#/components/parameters/Architecture'
+      responses:
+        '200':
+          description: Locally available packages.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Package'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '502':
+          $ref: '#/components/responses/KraftFailure'
+  /api/v1/networks:
+    get:
+      operationId: listNetworks
+      parameters:
+        - $ref: '#/components/parameters/LongOutput'
+      responses:
+        '200':
+          description: Local machine networks.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Network'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '502':
+          $ref: '#/components/responses/KraftFailure'
+  /api/v1/volumes:
+    get:
+      operationId: listVolumes
+      parameters:
+        - $ref: '#/components/parameters/LongOutput'
+      responses:
+        '200':
+          description: Local machine volumes.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Volume'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '502':
+          $ref: '#/components/responses/KraftFailure'
+components:
+  parameters:
+    AllMachines:
+      name: all
+      in: query
+      schema:
+        type: boolean
+        default: true
+    Platform:
+      name: platform
+      in: query
+      schema:
+        type: string
+        minLength: 1
+    Architecture:
+      name: architecture
+      in: query
+      schema:
+        type: string
+        minLength: 1
+    LongOutput:
+      name: long
+      in: query
+      schema:
+        type: boolean
+        default: false
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 50
+    PackageKind:
+      name: kind
+      in: query
+      schema:
+        type: string
+        enum: [all, app, lib, core]
+        default: all
+  responses:
+    BadRequest:
+      description: The request did not match the documented query parameters.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    KraftFailure:
+      description: The Kraft CLI failed or produced an unsupported response.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ServiceUnavailable:
+      description: The configured Kraft CLI is unavailable or incompatible.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Health:
+      type: object
+      additionalProperties: false
+      required: [status, version, kraftVersion]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        version:
+          type: string
+        kraftVersion:
+          type: string
+    Error:
+      type: object
+      additionalProperties: false
+      required: [code, message]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+    Machine:
+      type: object
+      additionalProperties: false
+      required: [name, status, platform, architecture]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        kernel: { type: string }
+        args: { type: string }
+        created: { type: string }
+        status: { type: string }
+        memory: { type: string }
+        ports: { type: string }
+        ip: { type: string }
+        pid: { type: string }
+        platform: { type: string }
+        architecture: { type: string }
+    Package:
+      type: object
+      additionalProperties: false
+      required: [name, version, type]
+      properties:
+        name: { type: string }
+        version: { type: string }
+        type: { type: string }
+        format: { type: string }
+        platform: { type: string }
+        architecture: { type: string }
+        size: { type: string }
+        created: { type: string }
+        updated: { type: string }
+        pulled: { type: string }
+        description: { type: string }
+        origin: { type: string }
+        index: { type: string }
+        manifest: { type: string }
+    Network:
+      type: object
+      additionalProperties: false
+      required: [name, driver, status]
+      properties:
+        machineId: { type: string }
+        name: { type: string }
+        network: { type: string }
+        driver: { type: string }
+        status: { type: string }
+    Volume:
+      type: object
+      additionalProperties: false
+      required: [name, driver, status]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        driver: { type: string }
+        status: { type: string }
+        source: { type: string }
+        destination: { type: string }

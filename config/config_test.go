@@ -3,6 +3,7 @@ package config
 import (
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestParseLogType(t *testing.T) {
@@ -26,7 +27,8 @@ func TestParseLogLevel(t *testing.T) {
 }
 
 func TestLoadStoresResolvedValues(t *testing.T) {
-	Load(8080, LogTypeJSON, LogLevelError, true)
+	kraftConfig := KraftConfig{Binary: "test-kraft", ExpectedVersion: "0.12.14", CommandTimeout: time.Second}
+	Load(8080, LogTypeJSON, LogLevelError, true, kraftConfig)
 
 	if Port() != 8080 {
 		t.Fatalf("Port() = %d, want 8080", Port())
@@ -39,5 +41,17 @@ func TestLoadStoresResolvedValues(t *testing.T) {
 	}
 	if !SuppressLogs() {
 		t.Fatal("SuppressLogs() = false, want true")
+	}
+	if Kraft() != kraftConfig {
+		t.Fatalf("Kraft() = %#v, want %#v", Kraft(), kraftConfig)
+	}
+}
+
+func TestValidateKraftConfig(t *testing.T) {
+	if err := ValidateKraftConfig(DefaultKraftConfig()); err != nil {
+		t.Fatalf("ValidateKraftConfig(default) error = %v", err)
+	}
+	if err := ValidateKraftConfig(KraftConfig{}); err == nil {
+		t.Fatal("ValidateKraftConfig(empty) error = nil, want error")
 	}
 }
