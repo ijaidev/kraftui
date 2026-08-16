@@ -63,7 +63,7 @@ func (s *Server) Listen(ctx context.Context) error {
 	}
 	errCh := make(chan error, 1)
 	go func() {
-		log.G.Info("server listening", "version", s.version, "url", fmt.Sprintf("http://localhost:%d", s.port))
+		log.G().Info("server listening", "version", s.version, "url", fmt.Sprintf("http://localhost:%d", s.port))
 		if err := srv.Serve(listner); err != nil && err != http.ErrServerClosed {
 			errCh <- err
 		}
@@ -72,7 +72,7 @@ func (s *Server) Listen(ctx context.Context) error {
 
 	select {
 	case <-ctx.Done():
-		log.G.Info("received interruption, shutting down")
+		log.G().Info("received interruption, shutting down")
 	case err := <-errCh:
 		return err
 	}
@@ -166,7 +166,7 @@ func (s *Server) getListner() (net.Listener, error) {
 		}
 
 		if isPortOccupiedError(err) {
-			log.G.Warn("port is occupied, checking next", "port", currentPort)
+			log.G().Warn("port is occupied, checking next", "port", currentPort)
 		} else {
 			return nil, fmt.Errorf("critical binding error on port %d: %w", currentPort, err)
 		}
@@ -196,7 +196,7 @@ func (s *Server) ListMachines(ctx context.Context, request api.ListMachinesReque
 	}
 	items, err := s.kraft.ListMachines(ctx, request.Params)
 	if err != nil {
-		log.G.Error("Kraft command failed", "error", err)
+		log.G().Error("Kraft command failed", "error", err)
 		return api.ListMachines502JSONResponse{
 			KraftFailureJSONResponse: api.KraftFailureJSONResponse(api.Error{Code: "kraft_command_failed", Message: "Kraft command failed"}),
 		}, nil
@@ -212,7 +212,7 @@ func (s *Server) ListPackages(ctx context.Context, request api.ListPackagesReque
 	}
 	items, err := s.kraft.ListPackages(ctx, request.Params)
 	if err != nil {
-		log.G.Error("Kraft command failed", "error", err)
+		log.G().Error("Kraft command failed", "error", err)
 		return api.ListPackages502JSONResponse{
 			KraftFailureJSONResponse: api.KraftFailureJSONResponse(api.Error{Code: "kraft_command_failed", Message: "Kraft command failed"}),
 		}, nil
@@ -228,7 +228,7 @@ func (s *Server) ListNetworks(ctx context.Context, request api.ListNetworksReque
 	}
 	items, err := s.kraft.ListNetworks(ctx, request.Params)
 	if err != nil {
-		log.G.Error("Kraft command failed", "error", err)
+		log.G().Error("Kraft command failed", "error", err)
 		return api.ListNetworks502JSONResponse{
 			KraftFailureJSONResponse: api.KraftFailureJSONResponse(api.Error{Code: "kraft_command_failed", Message: "Kraft command failed"}),
 		}, nil
@@ -244,7 +244,7 @@ func (s *Server) ListVolumes(ctx context.Context, request api.ListVolumesRequest
 	}
 	items, err := s.kraft.ListVolumes(ctx, request.Params)
 	if err != nil {
-		log.G.Error("Kraft command failed", "error", err)
+		log.G().Error("Kraft command failed", "error", err)
 		return api.ListVolumes502JSONResponse{
 			KraftFailureJSONResponse: api.KraftFailureJSONResponse(api.Error{Code: "kraft_command_failed", Message: "Kraft command failed"}),
 		}, nil

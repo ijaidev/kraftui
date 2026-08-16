@@ -9,20 +9,26 @@ import (
 	charmlog "github.com/charmbracelet/log"
 )
 
-// G is the process-wide logger. It defaults to slog's standard logger until
+// g is the process-wide logger. It defaults to slog's standard logger until
 // Configure is called with application settings.
-var G = slog.Default()
+var g = slog.Default()
 
-// Configure initializes G from the resolved log type, level, and quiet flag.
+// G returns the process-wide logger.
+func G() *slog.Logger {
+	return g
+}
+
+// Configure initializes the process-wide logger from the resolved log type,
+// level, and quiet flag.
 func Configure(kind LogType, level LogLevel, suppress bool) {
 	if suppress {
-		G = slog.New(slog.NewTextHandler(io.Discard, nil))
-		slog.SetDefault(G)
+		g = slog.New(slog.NewTextHandler(io.Discard, nil))
+		slog.SetDefault(g)
 		return
 	}
 
-	G = newLogger(kind, level, os.Stderr)
-	slog.SetDefault(G)
+	g = newLogger(kind, level, os.Stderr)
+	slog.SetDefault(g)
 }
 
 func newLogger(kind LogType, level LogLevel, output io.Writer) *slog.Logger {

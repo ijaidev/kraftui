@@ -8,7 +8,7 @@ import (
 )
 
 func TestGlobalLoggerInitialized(t *testing.T) {
-	if G == nil {
+	if G() == nil {
 		t.Fatal("G is nil")
 	}
 }

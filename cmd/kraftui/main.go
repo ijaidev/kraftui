@@ -33,16 +33,16 @@ func main() {
 	kraftConfig := options.kraftConfig()
 	config.Load(options.values.Port, options.values.LogType, options.values.LogLevel, options.values.SuppressLogs, kraftConfig)
 	log.Configure(options.values.LogType, options.values.LogLevel, options.values.SuppressLogs)
-	log.G.Info("logger configured", "type", config.CurrentLogType(), "level", config.CurrentLogLevel(), "suppressed", config.SuppressLogs())
+	log.G().Info("logger configured", "type", config.CurrentLogType(), "level", config.CurrentLogLevel(), "suppressed", config.SuppressLogs())
 
 	kraftClient, err := kraft.New(config.Kraft())
 	if err != nil {
-		log.G.Error("Kraft CLI configuration is invalid", "error", err)
+		log.G().Error("Kraft CLI configuration is invalid", "error", err)
 		os.Exit(1)
 	}
 	kraftVersion, err := kraftClient.Verify(ctx)
 	if err != nil {
-		log.G.Error("Kraft CLI is unavailable or incompatible", "error", err)
+		log.G().Error("Kraft CLI is unavailable or incompatible", "error", err)
 		os.Exit(1)
 	}
 
@@ -51,7 +51,7 @@ func main() {
 	err = server.Listen(ctx)
 
 	if err != nil {
-		log.G.Error("server stopped", "error", err, "report_issue", "https://github.com/ijaidev/kraftui")
+		log.G().Error("server stopped", "error", err, "report_issue", "https://github.com/ijaidev/kraftui")
 		os.Exit(1)
 	}
 }
