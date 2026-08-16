@@ -32,7 +32,7 @@ func main() {
 	}
 	kraftConfig := options.kraftConfig()
 	config.Load(options.values.Port, options.values.LogType, options.values.LogLevel, options.values.SuppressLogs, kraftConfig)
-	log.Configure()
+	log.Configure(options.values.LogType, options.values.LogLevel, options.values.SuppressLogs)
 	log.G.Info("logger configured", "type", config.CurrentLogType(), "level", config.CurrentLogLevel(), "suppressed", config.SuppressLogs())
 
 	kraftClient, err := kraft.New(config.Kraft())

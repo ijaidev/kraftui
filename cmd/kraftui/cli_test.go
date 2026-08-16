@@ -6,14 +6,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ijaidev/kraftui/config"
+	"github.com/ijaidev/kraftui/log"
 )
 
 func TestLoadCLIUsesDefaults(t *testing.T) {
 	clearEnvironment(t)
 	got := loadCLIForTest(t)
 
-	if got.values.Port != 0 || got.values.LogType != config.LogTypeFancy || got.values.LogLevel != config.LogLevelInfo || got.values.SuppressLogs || got.values.KraftBinary != "kraft" || got.values.KraftTimeout != "15s" {
+	if got.values.Port != 0 || got.values.LogType != log.LogTypeFancy || got.values.LogLevel != log.LogLevelInfo || got.values.SuppressLogs || got.values.KraftBinary != "kraft" || got.values.KraftTimeout != "15s" {
 		t.Fatalf("options = %#v, want defaults", got.values)
 	}
 }
@@ -27,7 +27,7 @@ func TestLoadCLIUsesEnvironment(t *testing.T) {
 	t.Setenv("KRAFTUI_KRAFT_TIMEOUT", "5s")
 	got := loadCLIForTest(t)
 
-	if got.values.Port != 8080 || got.values.LogType != config.LogTypeFancy || got.values.LogLevel != config.LogLevelWarn || !got.values.SuppressLogs || got.values.KraftBinary != "/usr/local/bin/kraft" || got.values.KraftTimeout != "5s" {
+	if got.values.Port != 8080 || got.values.LogType != log.LogTypeFancy || got.values.LogLevel != log.LogLevelWarn || !got.values.SuppressLogs || got.values.KraftBinary != "/usr/local/bin/kraft" || got.values.KraftTimeout != "5s" {
 		t.Fatalf("options = %#v, want environment values", got.values)
 	}
 }
@@ -39,7 +39,7 @@ func TestLoadCLIFlagsOverrideEnvironment(t *testing.T) {
 	t.Setenv("KRAFTUI_SUPPRESS_LOGS", "true")
 	got := loadCLIForTest(t, "--port=9090", "--log-type=json", "--log-level=debug", "--quiet=false", "--kraft-binary=/opt/kraft", "--kraft-timeout=30s")
 
-	if got.values.Port != 9090 || got.values.LogType != config.LogTypeJSON || got.values.LogLevel != config.LogLevelDebug || got.values.SuppressLogs || got.values.KraftBinary != "/opt/kraft" || got.values.KraftTimeout != "30s" {
+	if got.values.Port != 9090 || got.values.LogType != log.LogTypeJSON || got.values.LogLevel != log.LogLevelDebug || got.values.SuppressLogs || got.values.KraftBinary != "/opt/kraft" || got.values.KraftTimeout != "30s" {
 		t.Fatalf("options = %#v, want flag values", got.values)
 	}
 }

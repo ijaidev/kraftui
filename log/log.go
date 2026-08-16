@@ -7,41 +7,21 @@ import (
 	"os"
 
 	charmlog "github.com/charmbracelet/log"
-	"github.com/ijaidev/kraftui/config"
-)
-
-// LogType controls the logger output format.
-type LogType = config.LogType
-
-const (
-	LogTypeBasic = config.LogTypeBasic
-	LogTypeFancy = config.LogTypeFancy
-	LogTypeJSON  = config.LogTypeJSON
-)
-
-// LogLevel controls the minimum emitted severity.
-type LogLevel = config.LogLevel
-
-const (
-	LogLevelDebug = config.LogLevelDebug
-	LogLevelInfo  = config.LogLevelInfo
-	LogLevelWarn  = config.LogLevelWarn
-	LogLevelError = config.LogLevelError
 )
 
 // G is the process-wide logger. It defaults to slog's standard logger until
-// log.Configure() is called with application settings.
+// Configure is called with application settings.
 var G = slog.Default()
 
-// Configure initializes G after application configuration has been loaded.
-func Configure() {
-	if config.SuppressLogs() {
+// Configure initializes G from the resolved log type, level, and quiet flag.
+func Configure(kind LogType, level LogLevel, suppress bool) {
+	if suppress {
 		G = slog.New(slog.NewTextHandler(io.Discard, nil))
 		slog.SetDefault(G)
 		return
 	}
 
-	G = newLogger(config.CurrentLogType(), config.CurrentLogLevel(), os.Stderr)
+	G = newLogger(kind, level, os.Stderr)
 	slog.SetDefault(G)
 }
 
