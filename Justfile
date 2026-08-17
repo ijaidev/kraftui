@@ -8,6 +8,8 @@ bin_dir       := root / "bin"
 bin           := bin_dir / "kraftui"
 dist          := root / "internal" / "ui" / "dist"
 cmd_pkg       := "./cmd/kraftui"
+# Shared API port for split frontend/backend dev (override with KRAFTUI_PORT or --set api_port)
+api_port      := env("KRAFTUI_PORT", "5200")
 
 # list (Default): list recipes
 list:
@@ -44,7 +46,7 @@ build: frontend-build build-go
 
 # Builds and Runs the Go server
 dev *FLAGS: build-go
-    "{{ bin }}" {{ FLAGS }}
+    KRAFTUI_PORT="{{ api_port }}" "{{ bin }}" {{ FLAGS }}
 
 # Builds and Runs the Go server in debug mode
 dev-debug: (dev "--log-level debug")
@@ -56,7 +58,7 @@ run: build
 
 # Next.js dev server (no embed; use while iterating on UI)
 frontend-dev: deps
-    cd "{{ frontend_dir }}" && pnpm dev
+    cd "{{ frontend_dir }}" && KRAFTUI_PORT="{{ api_port }}" pnpm dev
 
 # Remove build artifacts; restore embed placeholder
 clean:

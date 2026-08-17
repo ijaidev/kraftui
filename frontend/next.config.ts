@@ -1,8 +1,9 @@
 import type { NextConfig } from "next";
 
 // Static export when building for the Go embed (STATIC_EXPORT=1).
-// Dev keeps a rewrite so /api hits the Go server on :8080.
+// Dev rewrites /api to the Go server on KRAFTUI_PORT (default 5200).
 const staticExport = process.env.STATIC_EXPORT === "1";
+const apiPort = process.env.KRAFTUI_PORT || "5200";
 
 const nextConfig: NextConfig = {
   images: {
@@ -17,7 +18,7 @@ if (staticExport) {
   nextConfig.rewrites = async () => [
     {
       source: "/api/:path*",
-      destination: "http://127.0.0.1:8080/api/:path*",
+      destination: `http://127.0.0.1:${apiPort}/api/:path*`,
     },
   ];
 }
