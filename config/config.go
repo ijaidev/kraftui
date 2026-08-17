@@ -9,7 +9,7 @@ import (
 )
 
 // SupportedKraftVersion is the exact Kraft CLI version supported by KraftUI.
-const SupportedKraftVersion = "0.12.14"
+const SupportedKraftVersion = "v0.12.15"
 
 type config struct {
 	version      string
