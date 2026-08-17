@@ -13,7 +13,7 @@ import (
 )
 
 type cliArgs struct {
-	Port         int          `arg:"--port,env:KRAFTUI_PORT" default:"0" help:"HTTP listen port"`
+	Port         int          `arg:"--port,env:KRAFTUI_PORT" default:"0" help:"HTTP listen port (0 tries 5200-5204)"`
 	LogType      log.LogType  `arg:"--log-type,env:KRAFTUI_LOG_TYPE" default:"fancy" help:"Log output type: basic, fancy, or json"`
 	LogLevel     log.LogLevel `arg:"--log-level,env:KRAFTUI_LOG_LEVEL" default:"info" help:"Minimum log level: debug, info, warn, or error"`
 	SuppressLogs bool         `arg:"--quiet,env:KRAFTUI_SUPPRESS_LOGS" default:"false" help:"Suppress all log output"`

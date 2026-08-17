@@ -2,6 +2,9 @@ package server
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"slices"
@@ -17,11 +20,12 @@ import (
 type fakeKraftRunner struct {
 	result kraft.Result
 	args   []string
+	err    error
 }
 
 func (r *fakeKraftRunner) Run(_ context.Context, _ string, args []string) (kraft.Result, error) {
 	r.args = append([]string(nil), args...)
-	return r.result, nil
+	return r.result, r.err
 }
 
 func newTestServer(t *testing.T, runner *fakeKraftRunner) *Server {
@@ -103,5 +107,99 @@ func TestHandlePackagesRejectsOutOfRangeLimit(t *testing.T) {
 
 	if recorder.Code != http.StatusBadRequest || !strings.Contains(recorder.Body.String(), "invalid_query") {
 		t.Fatalf("response = %d %s", recorder.Code, recorder.Body.String())
+	}
+}
+
+func TestHandleMachinesKraftFailure(t *testing.T) {
+	runner := &fakeKraftRunner{err: errors.New("exit 1"), result: kraft.Result{Stderr: []byte("kraft: failed")}}
+	handler := newTestHandler(t, newTestServer(t, runner))
+
+	request := httptest.NewRequest(http.MethodGet, "/api/v1/machines", nil)
+	recorder := httptest.NewRecorder()
+	handler.ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusBadGateway || !strings.Contains(recorder.Body.String(), "kraft_command_failed") {
+		t.Fatalf("response = %d %s", recorder.Code, recorder.Body.String())
+	}
+}
+
+func TestHandleMachinesUnavailableWithoutClient(t *testing.T) {
+	handler := newTestHandler(t, NewServer(0, "test", "0.12.14", nil))
+
+	request := httptest.NewRequest(http.MethodGet, "/api/v1/machines", nil)
+	recorder := httptest.NewRecorder()
+	handler.ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusBadGateway || !strings.Contains(recorder.Body.String(), "kraft_unavailable") {
+		t.Fatalf("response = %d %s", recorder.Code, recorder.Body.String())
+	}
+}
+
+func TestGetListenerBindsConfiguredPort(t *testing.T) {
+	probe, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("Listen() error = %v", err)
+	}
+	port := probe.Addr().(*net.TCPAddr).Port
+	if err := probe.Close(); err != nil {
+		t.Fatalf("Close() error = %v", err)
+	}
+
+	listener, err := (&Server{port: port}).getListener()
+	if err != nil {
+		t.Fatalf("getListener() error = %v", err)
+	}
+	defer listener.Close()
+
+	if got := listener.Addr().(*net.TCPAddr).Port; got != port {
+		t.Fatalf("port = %d, want %d", got, port)
+	}
+}
+
+func TestListenShutsDownOnCancel(t *testing.T) {
+	probe, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("Listen() error = %v", err)
+	}
+	port := probe.Addr().(*net.TCPAddr).Port
+	if err := probe.Close(); err != nil {
+		t.Fatalf("Close() error = %v", err)
+	}
+
+	server := newTestServer(t, &fakeKraftRunner{})
+	server.port = port
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- server.Listen(ctx)
+	}()
+
+	url := fmt.Sprintf("http://127.0.0.1:%d/api/health", port)
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		resp, err := http.Get(url)
+		if err == nil {
+			resp.Body.Close()
+			if resp.StatusCode == http.StatusOK {
+				break
+			}
+		}
+		if time.Now().After(deadline) {
+			cancel()
+			t.Fatalf("server did not become ready: %v", err)
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+
+	cancel()
+	select {
+	case err := <-errCh:
+		if err != nil {
+			t.Fatalf("Listen() = %v, want nil", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("Listen() did not return after cancel")
 	}
 }

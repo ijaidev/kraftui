@@ -81,7 +81,7 @@ func Version() string {
 	return g.version
 }
 
-// Port returns the configured HTTP listen port. Zero selects an available port.
+// Port returns the configured HTTP listen port. Zero tries 5200-5204.
 func Port() int {
 	return g.port
 }
