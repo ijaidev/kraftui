@@ -37,16 +37,40 @@ async function read<T>(request: Promise<SdkResult<T>>): Promise<ResourceResult<T
   }
 }
 
+const UNREACHABLE_MESSAGE = "Could not reach KraftUI."
+
+export async function fetchMachines(): Promise<ResourceResult<Machine[]>> {
+  return read(listMachines({ query: { all: true } }))
+}
+
+export async function fetchNetworks(): Promise<ResourceResult<Network[]>> {
+  return read(listNetworks())
+}
+
+export async function fetchVolumes(): Promise<ResourceResult<Volume[]>> {
+  return read(listVolumes())
+}
+
+export async function fetchPackages(): Promise<ResourceResult<Package[]>> {
+  return read(listPackages({ query: { limit: 100 } }))
+}
+
 export async function fetchRuntime(): Promise<RuntimeSnapshot> {
   const [health, machines, networks, volumes, packages] = await Promise.all([
     read(getHealth()),
-    read(listMachines({ query: { all: true } })),
-    read(listNetworks()),
-    read(listVolumes()),
-    read(listPackages({ query: { limit: 50 } })),
+    fetchMachines(),
+    fetchNetworks(),
+    fetchVolumes(),
+    fetchPackages(),
   ])
 
   return { health, machines, networks, volumes, packages }
+}
+
+export function isKraftUnreachable(
+  result: ResourceResult<unknown>
+): result is { ok: false; message: string } {
+  return !result.ok && result.message === UNREACHABLE_MESSAGE
 }
 
 export function isRuntimeUnreachable(snapshot: RuntimeSnapshot): boolean {
@@ -57,4 +81,11 @@ export function isRuntimeUnreachable(snapshot: RuntimeSnapshot): boolean {
     !snapshot.volumes.ok &&
     !snapshot.packages.ok
   )
+}
+
+export function kraftUnavailableCopy(message?: string): string {
+  if (message === UNREACHABLE_MESSAGE) {
+    return "Could not reach KraftUI. Start the backend with just dev."
+  }
+  return "Check that kraft 0.12.14 is on PATH, then restart KraftUI."
 }

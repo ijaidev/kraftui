@@ -20,14 +20,19 @@ import {
 import { MonoText } from "@/components/dashboard/mono-text"
 import { StatusBadge } from "@/components/dashboard/status-badge"
 import { TableSkeleton } from "@/components/dashboard/table-skeleton"
+import { ViewAllLink } from "@/components/dashboard/view-all-link"
 import type { Machine } from "@/lib/api/types.gen"
 import type { ResourceResult } from "@/lib/runtime"
 import { formatPlatArch, machineAddress, summarizeStatuses } from "@/lib/status"
 
 export function MachineSection({
   machines,
+  limit,
+  viewAllHref,
 }: {
   machines?: ResourceResult<Machine[]>
+  limit?: number
+  viewAllHref?: string
 }) {
   const meta = machines?.ok ? summarizeStatuses(machines.data) : undefined
 
@@ -46,12 +51,19 @@ export function MachineSection({
           </p>
         ) : null}
       </div>
-      <MachineBody machines={machines} />
+      <MachineBody machines={machines} limit={limit} />
+      {viewAllHref ? <ViewAllLink href={viewAllHref} /> : null}
     </section>
   )
 }
 
-function MachineBody({ machines }: { machines?: ResourceResult<Machine[]> }) {
+function MachineBody({
+  machines,
+  limit,
+}: {
+  machines?: ResourceResult<Machine[]>
+  limit?: number
+}) {
   if (machines === undefined) {
     return <TableSkeleton columns={6} />
   }
@@ -85,6 +97,9 @@ function MachineBody({ machines }: { machines?: ResourceResult<Machine[]> }) {
     )
   }
 
+  const rows =
+    limit === undefined ? machines.data : machines.data.slice(0, limit)
+
   return (
     <Table>
       <TableHeader>
@@ -98,7 +113,7 @@ function MachineBody({ machines }: { machines?: ResourceResult<Machine[]> }) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {machines.data.map((machine) => (
+        {rows.map((machine) => (
           <TableRow
             key={machine.id ?? `${machine.name}-${machine.platform}-${machine.architecture}`}
           >
